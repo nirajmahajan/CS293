@@ -16,6 +16,25 @@ int main() {
 
 	while(true) {
 		char type; cin >> type;
+		// cout << ans[21] << endl;
+		// if (!filled.empty()) {
+		// 	cout << filled.front().starting << " " << filled.front().pid  << " " << filled.front().length<< endl;
+		// }
+
+		// if(num_req == 20 || num_req == 21 || num_req == 27) {
+			// cout << "\n\nCurrent state for type " << type << " and req num " << num_req << " \nPendings : \n";
+			// for (auto elem : pendings) {
+			// 	cout << elem.pid << " " << elem.length << " " << elem.request << endl;
+			// }
+			// cout << "\nFilled : \n";
+			// for (auto elem : filled) {
+			// 	cout << elem.pid << " " << elem.starting << " " << elem.length << " " << elem.request << endl;
+			// }
+			// cout << endl << endl;
+		// }
+
+
+
 		if (type == 'H') {
 			break;
 		} else if (type == 'A') {
@@ -63,7 +82,7 @@ int main() {
 				} else {
 					ans[element.request] = -1;
 					pendings.push_back(element);
-					cout << "pend" << endl;
+					// cout << "pend" << endl;
 				}
 			}
 		} else if (type == 'D') {
@@ -75,12 +94,14 @@ int main() {
 
 
 			list<Triple>::iterator vi = filled.begin();
-			list<Triple>::iterator lasti;
 			int prev_end = -1;
 			int next_start;
+			auto lasti = vi;
 			bool deleted = false;
 			for(vi = filled.begin(); vi != filled.end(); vi++) {
 				Triple temp = *vi;
+				// cout << "iter.starting " << temp.starting << endl;
+				// cout << "lloc " << lloc << endl;
 				if (temp.starting == lloc) {
 					if(temp.pid == lpid) {
 						
@@ -94,7 +115,8 @@ int main() {
 						vi--;
 
 						filled.erase(vi);
-
+						// cout << vi->pid << vi->starting << vi->length << endl;
+						// cout << lasti->pid << lasti->starting << lasti->length << endl;
 						deleted = true;
 						ans[num_req] = 0;
 						break;
@@ -107,27 +129,32 @@ int main() {
 				}
 			}
 
+			if (deleted == false) {
+				ans[num_req] = 1;
+			}
+
 			if(deleted && !pendings.empty()) {
-				// cout << "enter";
 				int new_size = next_start - prev_end-1;
-				// cout << new_size << "sad";
 				list<Triple>::iterator pi = pendings.begin();
 
 				for(pi = pendings.begin(); pi != pendings.end(); pi++) {
+					new_size = next_start - prev_end-1;
 					Triple temp = *pi;
+
+					if(new_size <= 0) {
+						break;
+					}
 
 					if (temp.length <= new_size) {
 						temp.starting = prev_end+1;
-						if (lasti == filled.end()) {
-							filled.push_back(temp);
-						} else {
-							filled.insert(lasti, temp);
-						}
+						filled.insert(lasti, temp);
 						ans[temp.request] = temp.starting;
-						pendings.erase(lasti);
-						break;
+						prev_end = temp.starting + temp.length - 1;
+						pendings.erase(pi);
+						pi--;
 					}
 				}
+				// cout << filled.size() << endl;
 			}
 
 		} else if (type == 'T') {
@@ -138,93 +165,73 @@ int main() {
 				ans[num_req] = 1;
 			}
 
-			list<Triple>::iterator vi = filled.begin();
-			bool deleted = false;
-			for(vi = filled.begin(); vi != filled.end(); vi++) {
-				Triple temp = *vi;
-				if(temp.pid == lpid) {
-					deleted = true;
-				} else {
-					copied.push_back(temp);
+			list<Triple>::iterator pi = pendings.begin();
+			for(pi = pendings.begin(); pi!= pendings.end(); pi++) {
+				Triple temp = *pi;
+				if(temp.pid == lpid){
+					pendings.erase(pi);
+					pi--;
 				}
 			}
-			// created copied
-			// swap now
-			filled.swap(copied);
-
-			if(!deleted) {
-				ans[num_req] = 1;
-			} else if(!pendings.empty()){
-				ans[num_req] = 0;
-				list<Triple>::iterator pi = pendings.begin();
-
-				
-				if(filled.empty()) {
-					list<Triple> copied_left;
-					int end = -1;
-					for(pi = pendings.begin(); pi != pendings.end(); pi++) {
-						Triple temp = *pi;
-						if(temp.pid == lpid) {
-							continue;
-						}
-						if(temp.length <= M - 1 - end) {
-							filled.push_back(temp);
-							end = temp.starting + temp.length - 1;
-						} else {
-							copied_left.push_back(temp);
-						}
-					}
-					pendings.swap(copied_left);
-					break;
+			bool deleted = false;
+			list<Triple>::iterator fi = filled.begin();
+			for(fi = filled.begin(); fi!= filled.end(); fi++) {
+				Triple temp = *fi;
+				if(temp.pid == lpid){
+					filled.erase(fi);
+					fi--;
+					deleted = true;
 				}
+			}
+			if(deleted == false) {
+				ans[num_req] = 1;
+				num_req++;
+				continue;
+			} else if (pendings.empty()){
+				num_req ++;
+				continue;
+				ans[num_req] = 0;
+			} else {
+				ans[num_req] = 0;
+				pi = pendings.begin();
 
-				list<Triple>::iterator fi = filled.begin();
-
-				// filled is not empty so search along
-///////////////////////////////////
-
-				list<Triple> copied_left;
-				for(pi = pendings.begin(); pi != pendings.end(); pi++) {
-					Triple element = *pi;
-					if(element.pid == lpid) {
-						continue;
-					}
-
-					list<Triple>::iterator vi = filled.begin();
+				for(pi = pendings.begin(); pi != pendings.end(); pi++){
+					Triple temp = *pi;
 					int prev_end = -1;
-					bool inserted = false;
-					for(vi = filled.begin(); vi != filled.end(); vi++) {
-						Triple temp = *vi;
-						if ((temp.starting - prev_end - 1) >= element.length) {
-							element.starting = prev_end+1;
-							filled.insert(vi, element);
-							inserted = true;
-							ans[element.request] = element.starting;
+					bool delted = false;
+					fi = filled.begin();
+					for(fi = filled.begin(); fi != filled.end(); fi++) {
+						Triple ftemp = *fi;
+						if(ftemp.starting - prev_end - 1 >= temp.length) {
+							temp.starting = prev_end + 1;
+							ans[temp.request] = temp.starting;
+							filled.insert(fi, temp);
+							pendings.erase(pi);
+							deleted = true;
+							pi--;
 							break;
 						} else {
-							prev_end = temp.starting + temp.length - 1;
+							prev_end = ftemp.starting + ftemp.length -1;
 						}
 					}
-					if(!inserted) {
-						int end_mem = M-1-prev_end;
-						if(end_mem >= element.length){
-							element.starting = prev_end+1;
-							filled.push_back(element);
-							ans[element.request] = element.starting;
-						} else {
-							copied_left.push_back(element);
-						}
+					if(!deleted && M - prev_end - 1 >= temp.length) {
+						temp.starting = prev_end + 1;
+						ans[temp.request] = temp.starting;
+						filled.push_back(temp);
+						pendings.erase(pi);
+						pi--;	
 					}
 				}
-				////////////////////////
-				pendings.swap(copied_left);
 			}
-		} 
+			
+		}
+		// cout << ans[num_req] << " " ;
 		num_req++;
-		// cout << type << "type" << endl;
+		// cout << type << " type" << endl;
+
 	}
 
 	for(int i = 0; i < num_req ; i++) {
-		cout << i << " " << ans[i] << endl;
+		cout << ans[i] << endl;
 	}
 }
