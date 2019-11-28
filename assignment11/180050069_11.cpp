@@ -5,7 +5,7 @@ long long parent[1001];
 long long capacity[1001];
 long long allCost[1001];
 list<string> addresses[1001];
-unordered_map<string, list<string>::iterator> nodeMaps[1001];
+map<string, list<string>::iterator> nodeMaps[1001];
 
 long long runQuery(string q, long long node) {
 	if(node == 0) {
